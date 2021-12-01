@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Project {
 	@JsonProperty("title")
-	String NameProject;
+	String nameProject;
 }

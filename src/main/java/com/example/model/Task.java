@@ -15,13 +15,13 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Task {
     @JsonProperty("id")
-    int IdTask;
+    int idTask;
     @JsonProperty("subject")
-    String NameTask;
+    String nameTask;
     @JsonProperty("percentageDone")
-    Double Progess;
+    Double progress;
     @JsonProperty("_links")
     Links link;
     @JsonProperty("spentOn")
-    String SpentOn;
+    String spentOn;
 }
