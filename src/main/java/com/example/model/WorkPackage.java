@@ -2,7 +2,6 @@ package com.example.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,9 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OpenProject {
-	@JsonProperty("_embedded")
-	Embedded embedded;
-	@JsonProperty("percentageDone")
-	Double percentageDone;
+public class WorkPackage {
+    @JsonProperty("href")
+    String href;
 }

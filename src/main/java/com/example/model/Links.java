@@ -17,4 +17,6 @@ public class Links {
     Assignee assignee;
     @JsonProperty("user")
     User user;
+    @JsonProperty("workPackage")
+    WorkPackage workPackage;
 }
