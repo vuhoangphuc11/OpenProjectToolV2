@@ -1,6 +1,7 @@
 package com.example.rest;
 
 import com.example.model.OpenProject;
+import com.example.model.Task;
 import com.example.service.GetOpenProjectDataService;
 import com.example.service.OpenProjectExportExcel;
 import org.apache.commons.codec.EncoderException;
@@ -64,12 +65,15 @@ public class OpenProjectRestController {
                 System.out.println(data.getEmbedded().getTasks().get(i).getIdTask());
                 System.out.println(data.getEmbedded().getTasks().get(i).getNameTask());
                 System.out.println(data.getEmbedded().getTasks().get(i).getSpentOn());
-                System.out.println(output.getPercentageDone());
+                System.out.println(data.getEmbedded().getTasks().get(i).getProgress());
                 System.out.println("-------------------------------------------------");
+
+                data.getEmbedded().getTasks().get(i).setProgress(output.getPercentageDone());
             }
         }
-        response.setContentType("application/octet-stream");
-        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+
+        response.setContentType("application/json");
+        DateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
         String currentDateTime = dateFormatter.format(new Date());
 
         String headerKey = "Content-Disposition";
@@ -79,9 +83,9 @@ public class OpenProjectRestController {
         OpenProject openProject = data;
         OpenProject progess = output;
 
-        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(openProject, progess);
-
+        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(openProject,progess);
         excelExporter.export(response);
+
         return data;
     }
 

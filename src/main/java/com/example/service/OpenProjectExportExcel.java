@@ -6,6 +6,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import com.example.model.OpenProject;
+import com.example.model.Task;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -25,7 +26,7 @@ public class OpenProjectExportExcel {
     private OpenProject openProject;
     private OpenProject progess;
 
-    public OpenProjectExportExcel(OpenProject openProject, OpenProject progess) {
+    public OpenProjectExportExcel(OpenProject openProject,OpenProject progess) {
         this.openProject = openProject;
         this.progess = progess;
         workbook = new XSSFWorkbook();
@@ -42,11 +43,11 @@ public class OpenProjectExportExcel {
         font.setFontHeight(16);
         style.setFont(font);
 
-        createCell(row, 0, "Project", style);
-        createCell(row, 1, "Employee", style);
-        createCell(row, 2, "Planning for Today", style);
-        createCell(row, 3, "Report tody", style);
-        createCell(row, 4, "Issue", style);
+        createCell(row, 0, "ID Task", style);
+        createCell(row, 1, "Name Task", style);
+        createCell(row, 2, "Spent On", style);
+        createCell(row, 3, "User", style);
+        createCell(row, 4, "Progess", style);
 
     }
 
@@ -55,9 +56,11 @@ public class OpenProjectExportExcel {
         Cell cell = row.createCell(columnCount);
         if (value instanceof Integer) {
             cell.setCellValue((Integer) value);
-        } else if (value instanceof Boolean) {
+        } else if (value instanceof Double) {
+            cell.setCellValue((Double) value);
+        }else if (value instanceof Boolean) {
             cell.setCellValue((Boolean) value);
-        } else {
+        }  else {
             cell.setCellValue((String) value);
         }
         cell.setCellStyle(style);
@@ -75,11 +78,13 @@ public class OpenProjectExportExcel {
             Row row = sheet.createRow(rowCount++);
             int columnCount = 0;
 
-            createCell(row, columnCount++, openProject.getEmbedded().getTasks().get(i).getIdTask(), style);
-            createCell(row, columnCount++, openProject.getEmbedded().getTasks().get(i).getNameTask(), style);
-            createCell(row, columnCount++, openProject.getEmbedded().getTasks().get(i).getSpentOn(), style);
-            createCell(row, columnCount++, openProject.getEmbedded().getTasks().get(i).getLink().getUser(), style);
-            createCell(row, columnCount++, progess.getPercentageDone(), style);
+            Task task = openProject.getEmbedded().getTasks().get(i);
+
+            createCell(row, columnCount++, task.getIdTask(), style);
+            createCell(row, columnCount++, task.getNameTask(), style);
+            createCell(row, columnCount++, task.getSpentOn(), style);
+            createCell(row, columnCount++, task.getLink().getUser().getFullName(), style);
+            createCell(row, columnCount++, task.getProgress(), style);
         }
     }
 
