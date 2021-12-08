@@ -10,7 +10,6 @@ public class OpenProjectToolApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(OpenProjectToolApplication.class, args);
-
     }
 
 }

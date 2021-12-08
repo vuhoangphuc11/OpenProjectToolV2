@@ -33,42 +33,39 @@ public class OpenProjectRestController {
         String url = "https://vuhoangphuc.openproject.com/api/v3/projects/j5va/work_packages";
 
         OpenProject data = service.callApi(new URI(url));
-
-        System.out.println(data.getEmbedded());
-        System.out.println(projectList);
-
         return data;
     }
 
     @GetMapping(value = "/filter")
-    public OpenProject filterData(HttpServletResponse response) throws EncoderException, IOException {
+    public OpenProject filterData(HttpServletResponse response) throws EncoderException, IOException, URISyntaxException {
 
-        String filters = "[{\"project\": { \"operator\": \"=\", \"values\": [%s] } },{\"spent_on\":{\"operator\":\"t\",\"values\":[]}}]";
-        String url = "https://vuhoangphuc.openproject.com/api/v3/time_entries";
+        String host = "https://vuhoangphuc.openproject.com";
+        OpenProject output = null;
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filter", String.format(filters, projectList));
+        String filters = "[{\"project\": { \"operator\": \"*\", \"values\": [%s] } },{\"spent_on\":{\"operator\":\"t\",\"values\":[]}}]";
+        String url = host + "/api/v3/time_entries";
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filters", String.format(filters, projectList));
         OpenProject data = service.callApi(builder.build().toUri());
-
 
         long millis = System.currentTimeMillis();
         java.sql.Date date = new java.sql.Date(millis);
         String currentTime = date.toString();
 
-        OpenProject output = null;
+
         for (int i = 0; i < data.getEmbedded().getTasks().size(); i++) {
             if (data.getEmbedded().getTasks().get(i).getSpentOn().equals(currentTime)) {
-                String host = "https://vuhoangphuc.openproject.com";
+
                 String href = data.getEmbedded().getTasks().get(i).getLink().getWorkPackage().getHref();
                 UriComponentsBuilder call = UriComponentsBuilder.fromUriString(host + href);
                 output = service.callApi(call.build().toUri());
 
-                System.out.println(data.getEmbedded().getTasks().get(i).getIdTask());
-                System.out.println(data.getEmbedded().getTasks().get(i).getNameTask());
-                System.out.println(data.getEmbedded().getTasks().get(i).getSpentOn());
-                System.out.println(data.getEmbedded().getTasks().get(i).getProgress());
-                System.out.println("-------------------------------------------------");
+                Task task = data.getEmbedded().getTasks().get(i);
 
-                data.getEmbedded().getTasks().get(i).setProgress(output.getPercentageDone());
+                task.setIdTask(output.getIdTask());
+                task.setNameTask(output.getNameTask());
+                task.setProgress(output.getPercentageDone());
+
             }
         }
 
@@ -83,15 +80,10 @@ public class OpenProjectRestController {
         OpenProject openProject = data;
         OpenProject progess = output;
 
-        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(openProject,progess);
+        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(openProject, progess);
         excelExporter.export(response);
 
         return data;
     }
 
-//    @GetMapping("/export/excel")
-//    public void exportToExcel(HttpServletResponse response) throws IOException, EncoderException {
-//
-//
-//    }
 }

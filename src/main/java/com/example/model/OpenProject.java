@@ -16,4 +16,8 @@ public class OpenProject {
 	Embedded embedded;
 	@JsonProperty("percentageDone")
 	Double percentageDone;
+	@JsonProperty("id")
+	int idTask;
+	@JsonProperty("subject")
+	String nameTask;
 }
