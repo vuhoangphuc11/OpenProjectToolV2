@@ -3,7 +3,8 @@ package com.example.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -22,20 +23,20 @@ public class OpenProjectExportExcel {
     @Autowired
     private GetOpenProjectDataService service;
 
-    private XSSFWorkbook workbook;
+    private final XSSFWorkbook workbook;
     private XSSFSheet sheet;
+    private final Map<String, Map<String, Set<Task>>> exportData;
 
-    private OpenProject openProject;
-    private OpenProject progess;
+    private final OpenProject openProject;
 
-    public OpenProjectExportExcel(OpenProject openProject, OpenProject progess) {
+    public OpenProjectExportExcel(OpenProject openProject) {
         this.openProject = openProject;
-        this.progess = progess;
         workbook = new XSSFWorkbook();
+        exportData = new HashMap<>();
     }
 
-    private void writeHeaderLine() {
-        sheet = workbook.createSheet("OpenProject");
+    private void writeHeaderLine(String projectName) {
+        sheet = workbook.createSheet(projectName);
 
         Row row = sheet.createRow(0);
 
@@ -57,16 +58,14 @@ public class OpenProjectExportExcel {
 
 
         createCell(row, 0, "Date", style);
-        createCell(row, 1, "FullName", style);
-        createCell(row, 2, "ID", style);
-        createCell(row, 3, "Name Task   ", style);
-        createCell(row, 4, "Progess", style);
-        createCell(row, 5, "Spent On", style);
-
+        createCell(row, 1, "Resource Name", style);
+        createCell(row, 2, "Plan To Do (Morning)", style);
+        createCell(row, 3, "Done (Evening)", style);
+        createCell(row, 4, "Note", style);
     }
 
     private void createCell(Row row, int columnCount, Object value, CellStyle style) {
-        sheet.autoSizeColumn(columnCount);
+
         Cell cell = row.createCell(columnCount);
         if (value instanceof Integer) {
             cell.setCellValue((Integer) value);
@@ -80,18 +79,20 @@ public class OpenProjectExportExcel {
             cell.setCellValue((String) value);
         }
         cell.setCellStyle(style);
+        sheet.autoSizeColumn(columnCount);
     }
 
-    private void writeDataLines() {
+    private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee) {
         LocalDateTime dateNow = LocalDateTime.now();
         String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
 
-        int rowCount = 1;
+        AtomicInteger rowCount = new AtomicInteger(1);
 
         CellStyle style = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
         font.setFontHeight(12);
         style.setFont(font);
+        style.setWrapText(true);
 
         // fill foreground color ...
         style.setFillForegroundColor(IndexedColors.SEA_GREEN.index);
@@ -103,39 +104,74 @@ public class OpenProjectExportExcel {
         style.setBorderRight(BorderStyle.MEDIUM);
         style.setBorderTop(BorderStyle.MEDIUM);
 
-        Task task = null;
-        for (int i = 0; i < openProject.getEmbedded().getTasks().size(); i++) {
-            Row row = sheet.createRow(rowCount++);
-            int columnCount = 0;
-            task = openProject.getEmbedded().getTasks().get(i);
+        mapOfTaskByEmployee.forEach((key, value) -> {
+            Row row = sheet.createRow(rowCount.getAndIncrement());
+            StringBuilder todoContent = new StringBuilder();
+            StringBuilder reportContent =  new StringBuilder();
+            Iterator<Task> taskIterator = value.iterator();
+            while (taskIterator.hasNext()) {
+                Task task = taskIterator.next();
+                todoContent.append(String.format("#%s: %s", task.getIdTask(), task.getNameTask()));
+                String progress = task.getProgress().equals(100.0) ? "Done" :
+                        (task.getProgress().intValue()  + "%");
+                reportContent.append(String.format("#%s: %s (%s)", task.getIdTask(), task.getNameTask(), progress));
 
+                if (taskIterator.hasNext()) {
+                    todoContent.append("\n");
+                    reportContent.append("\n");
+                }
+            }
+            int columnCount = 0;
             createCell(row, columnCount++, currentTime, style);
-            createCell(row, columnCount++, task.getLink().getUser().getFullName(), style);
-            createCell(row, columnCount++, task.getIdTask(), style);
-            createCell(row, columnCount++, task.getNameTask(), style);
-            createCell(row, columnCount++, task.getProgress(), style);
-            createCell(row, columnCount++, task.getSpentOn(), style);
-        }
+            createCell(row, columnCount++, key, style);
+            createCell(row, columnCount++, todoContent.toString(), style);
+            createCell(row, columnCount++, reportContent.toString(), style);
+            createCell(row, columnCount, "", style);
+        });
 
         //merge date
-        sheet.addMergedRegion(new CellRangeAddress(1, rowCount - 1, 0, 0));
-
-        //merge id, nameTask, progress
-        for(int j = 1 ; j <= openProject.getEmbedded().getTasks().size() ; j++){
-            sheet.addMergedRegion(new CellRangeAddress(j, j, 2, 4));
+        if (rowCount.get() - 1 > 1) {
+            sheet.addMergedRegion(new CellRangeAddress(1, rowCount.get() - 1, 0, 0));
         }
 
     }
 
     public void export(HttpServletResponse response) throws IOException {
-        writeHeaderLine();
-        writeDataLines();
+        prepareDataForExport();
+        for (Map.Entry<String, Map<String, Set<Task>>> entry : exportData.entrySet()) {
+            writeHeaderLine(entry.getKey());
+            writeDataLines(entry.getValue());
+        }
 
         ServletOutputStream outputStream = response.getOutputStream();
         workbook.write(outputStream);
         workbook.close();
 
         outputStream.close();
+    }
 
+    private void prepareDataForExport() {
+        for (Task task:
+                openProject.getEmbedded().getTasks()) {
+            String projectName = task.getLink().getProject().getNameProject();
+            String employeeName = task.getLink().getUser().getFullName();
+            if (!exportData.containsKey(projectName)) {
+                Set<Task> listOfTask = new TreeSet<>(Comparator.comparingInt(Task::getIdTask));
+                listOfTask.add(task);
+                Map<String, Set<Task>>  mapOfTaskByEmployee = new HashMap<>();
+                mapOfTaskByEmployee.put(employeeName, listOfTask);
+
+                exportData.put(projectName, mapOfTaskByEmployee);
+            } else {
+                Map<String, Set<Task>> mapOfTaskByEmployee = exportData.get(projectName);
+                if (mapOfTaskByEmployee.containsKey(employeeName)) {
+                    mapOfTaskByEmployee.get(employeeName).add(task);
+                } else {
+                    Set<Task> listOfTask = new TreeSet<>(Comparator.comparingInt(Task::getIdTask));
+                    listOfTask.add(task);
+                    mapOfTaskByEmployee.put(employeeName, listOfTask);
+                }
+            }
+        }
     }
 }

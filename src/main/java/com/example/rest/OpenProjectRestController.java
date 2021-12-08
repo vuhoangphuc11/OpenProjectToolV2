@@ -4,6 +4,7 @@ import com.example.model.OpenProject;
 import com.example.model.Task;
 import com.example.service.GetOpenProjectDataService;
 import com.example.service.OpenProjectExportExcel;
+import com.example.util.DateTimeUtil;
 import org.apache.commons.codec.EncoderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,13 +18,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class OpenProjectRestController {
 
     @Value("${project_list}")
     private String projectList;
+    @Value("${host_url}")
+    private String hostUrl;
 
     @Autowired
     private GetOpenProjectDataService service;
@@ -37,53 +43,38 @@ public class OpenProjectRestController {
     }
 
     @GetMapping(value = "/filter")
-    public OpenProject filterData(HttpServletResponse response) throws EncoderException, IOException, URISyntaxException {
+    public void filterData(HttpServletResponse response) throws EncoderException, IOException, URISyntaxException {
 
-        String host = "https://vuhoangphuc.openproject.com";
-        OpenProject output = null;
+        String currentDate = DateTimeUtil.dateToString(new Date(), DateTimeUtil.YYYY_MM_DD_FORMAT);
 
-        String filters = "[{\"project\": { \"operator\": \"*\", \"values\": [%s] } },{\"spent_on\":{\"operator\":\"t\",\"values\":[]}}]";
-        String url = host + "/api/v3/time_entries";
+        String filters = "[{\"project\": { \"operator\": \"*\", \"values\": [%s]}},{\"spent_on\":{\"operator\":\"=d\",\"values\":[\"%s\"]}}]";
+        String url = hostUrl + "/api/v3/time_entries";
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filters", String.format(filters, projectList));
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filters",
+                String.format(filters, projectList, currentDate));
         OpenProject data = service.callApi(builder.build().toUri());
 
-        long millis = System.currentTimeMillis();
-        java.sql.Date date = new java.sql.Date(millis);
-        String currentTime = date.toString();
-
-
         for (int i = 0; i < data.getEmbedded().getTasks().size(); i++) {
-            if (data.getEmbedded().getTasks().get(i).getSpentOn().equals(currentTime)) {
 
-                String href = data.getEmbedded().getTasks().get(i).getLink().getWorkPackage().getHref();
-                UriComponentsBuilder call = UriComponentsBuilder.fromUriString(host + href);
-                output = service.callApi(call.build().toUri());
+            String href = data.getEmbedded().getTasks().get(i).getLink().getWorkPackage().getHref();
+            UriComponentsBuilder call = UriComponentsBuilder.fromUriString(hostUrl + href);
+            OpenProject output = service.callApi(call.build().toUri());
 
-                Task task = data.getEmbedded().getTasks().get(i);
+            Task task = data.getEmbedded().getTasks().get(i);
 
-                task.setIdTask(output.getIdTask());
-                task.setNameTask(output.getNameTask());
-                task.setProgress(output.getPercentageDone());
-
-            }
+            task.setIdTask(output.getIdTask());
+            task.setNameTask(output.getNameTask());
+            task.setProgress(output.getPercentageDone());
         }
 
         response.setContentType("application/json");
-        DateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
-        String currentDateTime = dateFormatter.format(new Date());
 
         String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=users_" + currentDateTime + ".xlsx";
+        String headerValue = "attachment; filename=Daily_Report_" + currentDate + ".xlsx";
         response.setHeader(headerKey, headerValue);
 
-        OpenProject openProject = data;
-        OpenProject progess = output;
-
-        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(openProject, progess);
+        OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data);
         excelExporter.export(response);
-
-        return data;
     }
 
 }
