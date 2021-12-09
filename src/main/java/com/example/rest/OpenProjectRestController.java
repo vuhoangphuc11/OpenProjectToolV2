@@ -70,7 +70,8 @@ public class OpenProjectRestController {
         response.setContentType("application/json");
 
         String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=Daily_Report_" + currentDate + ".xlsx";
+        //String headerValue = "attachment; filename=Daily_Report_" + currentDate + ".xlsx";
+        String headerValue = "attachment; filename=Daily_Report.xlsx";
         response.setHeader(headerKey, headerValue);
 
         OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data);

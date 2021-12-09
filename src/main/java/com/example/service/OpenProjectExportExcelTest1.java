@@ -1,17 +1,9 @@
 package com.example.service;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
 import com.example.model.OpenProject;
 import com.example.model.Task;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -19,18 +11,29 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class OpenProjectExportExcel {
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class OpenProjectExportExcelTest1 {
 
     @Autowired
     private GetOpenProjectDataService service;
 
-    private final XSSFWorkbook workbook;
-    private XSSFSheet sheet;
+    private Workbook workbook;
+    private Sheet sheet;
     private final Map<String, Map<String, Set<Task>>> exportData;
 
     private final OpenProject openProject;
 
-    public OpenProjectExportExcel(OpenProject openProject) {
+    public OpenProjectExportExcelTest1(OpenProject openProject) {
         this.openProject = openProject;
         workbook = new XSSFWorkbook();
         exportData = new HashMap<>();
@@ -42,9 +45,9 @@ public class OpenProjectExportExcel {
         Row row = sheet.createRow(0);
 
         CellStyle style = workbook.createCellStyle();
-        XSSFFont font = workbook.createFont();
+        Font font = workbook.createFont();
         font.setBold(true);
-        font.setFontHeight(12);
+        font.setFontHeight((short) 12);
         style.setFont(font);
 
         // fill foreground color ...
@@ -87,11 +90,11 @@ public class OpenProjectExportExcel {
         LocalDateTime dateNow = LocalDateTime.now();
         String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
 
-        AtomicInteger rowCount = new AtomicInteger(1);
+        //AtomicInteger rowCount = new AtomicInteger(1);
 
         CellStyle style = workbook.createCellStyle();
-        XSSFFont font = workbook.createFont();
-        font.setFontHeight(12);
+        Font font = workbook.createFont();
+        font.setFontHeight((short) 12);
         style.setFont(font);
         style.setWrapText(true);
 
@@ -105,8 +108,29 @@ public class OpenProjectExportExcel {
         style.setBorderRight(BorderStyle.MEDIUM);
         style.setBorderTop(BorderStyle.MEDIUM);
 
+        String excelFilePath = "C:\\Users\\vuhoa\\Desktop\\Daily_Report.xlsx";
+
+
+
+        try {
+
+            FileInputStream inputStream = new FileInputStream(new File(excelFilePath));
+            workbook = WorkbookFactory.create(inputStream);
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            int rowCount = sheet.getLastRowNum();
+            int count = ++rowCount;
+            int finalRowCount = rowCount;
+
             mapOfTaskByEmployee.forEach((key, value) -> {
-                Row row = sheet.createRow(rowCount.getAndIncrement());
+                Row row = sheet.createRow(count);
+
+                int columnCount = 0;
+
+                Cell cell = row.createCell(columnCount);
+                cell.setCellValue(finalRowCount);
+
                 StringBuilder todoContent = new StringBuilder();
                 StringBuilder reportContent =  new StringBuilder();
                 Iterator<Task> taskIterator = value.iterator();
@@ -122,7 +146,6 @@ public class OpenProjectExportExcel {
                         reportContent.append("\n");
                     }
                 }
-                int columnCount = 0;
                 createCell(row, columnCount++, currentTime, style);
                 createCell(row, columnCount++, key, style);
                 createCell(row, columnCount++, todoContent.toString(), style);
@@ -131,9 +154,20 @@ public class OpenProjectExportExcel {
             });
 
             //merge date
-            if (rowCount.get() - 1 > 1) {
-                sheet.addMergedRegion(new CellRangeAddress(1, rowCount.get() - 1, 0, 0));
-            }
+            sheet.addMergedRegion(new CellRangeAddress(1, rowCount - 1, 0, 0));
+
+            inputStream.close();
+
+            FileOutputStream outputStream = new FileOutputStream("C:\\Users\\vuhoa\\Desktop\\Daily_Report.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+
+        } catch (IOException | EncryptedDocumentException ex) {
+            ex.printStackTrace();
+        }
+
+
     }
 
     public void export(HttpServletResponse response) throws IOException {
@@ -143,11 +177,11 @@ public class OpenProjectExportExcel {
             writeDataLines(entry.getValue());
         }
 
-        ServletOutputStream outputStream = response.getOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
-
-        outputStream.close();
+//        ServletOutputStream outputStream = response.getOutputStream();
+//        workbook.write(outputStream);
+//        workbook.close();
+//
+//        outputStream.close();
     }
 
     private void prepareDataForExport() {
