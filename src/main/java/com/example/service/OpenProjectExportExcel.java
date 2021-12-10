@@ -1,32 +1,29 @@
 package com.example.service;
 
+import com.example.model.OpenProject;
+import com.example.model.Task;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
-import com.example.model.OpenProject;
-import com.example.model.Task;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
-
 public class OpenProjectExportExcel {
 
-    @Autowired
-    private GetOpenProjectDataService service;
-
-    private final XSSFWorkbook workbook;
+    private XSSFWorkbook workbook;
     private XSSFSheet sheet;
     private final Map<String, Map<String, Set<Task>>> exportData;
+    private final String fileName = "Daily_Report.xlsx";
 
     private final OpenProject openProject;
 
@@ -68,26 +65,14 @@ public class OpenProjectExportExcel {
     private void createCell(Row row, int columnCount, Object value, CellStyle style) {
 
         Cell cell = row.createCell(columnCount);
-        if (value instanceof Integer) {
-            cell.setCellValue((Integer) value);
-        } else if (value instanceof String) {
-            cell.setCellValue((String) value);
-        } else if (value instanceof Double) {
-            cell.setCellValue((Double) value);
-        } else if (value instanceof Boolean) {
-            cell.setCellValue((Boolean) value);
-        } else {
-            cell.setCellValue((String) value);
-        }
+        cell.setCellValue(String.valueOf(value));
         cell.setCellStyle(style);
         sheet.autoSizeColumn(columnCount);
     }
 
-    private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee) {
+    private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee, String projectName) {
         LocalDateTime dateNow = LocalDateTime.now();
         String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
-
-        AtomicInteger rowCount = new AtomicInteger(1);
 
         CellStyle style = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
@@ -105,49 +90,85 @@ public class OpenProjectExportExcel {
         style.setBorderRight(BorderStyle.MEDIUM);
         style.setBorderTop(BorderStyle.MEDIUM);
 
-            mapOfTaskByEmployee.forEach((key, value) -> {
-                Row row = sheet.createRow(rowCount.getAndIncrement());
-                StringBuilder todoContent = new StringBuilder();
-                StringBuilder reportContent =  new StringBuilder();
-                Iterator<Task> taskIterator = value.iterator();
-                while (taskIterator.hasNext()) {
-                    Task task = taskIterator.next();
-                    todoContent.append(String.format("#%s: %s", task.getIdTask(), task.getNameTask()));
-                    String progress = task.getProgress().equals(100.0) ? "Done" :
-                            (task.getProgress().intValue()  + "%");
-                    reportContent.append(String.format("#%s: %s (%s)", task.getIdTask(), task.getNameTask(), progress));
+        sheet = workbook.getSheet(projectName);
 
-                    if (taskIterator.hasNext()) {
-                        todoContent.append("\n");
-                        reportContent.append("\n");
-                    }
+        int starRow = sheet.getLastRowNum() + 1;
+        AtomicInteger rowCount = new AtomicInteger(starRow);
+
+        mapOfTaskByEmployee.forEach((key, value) -> {
+            Row row = sheet.createRow(rowCount.getAndIncrement());
+
+            int columnCount = 0;
+
+            Cell cell = row.createCell(columnCount);
+            // cell.setCellValue(finalRowCount);
+
+            StringBuilder todoContent = new StringBuilder();
+            StringBuilder reportContent = new StringBuilder();
+            Iterator<Task> taskIterator = value.iterator();
+            while (taskIterator.hasNext()) {
+                Task task = taskIterator.next();
+                todoContent.append(String.format("#%s: %s", task.getIdTask(), task.getNameTask()));
+                String progress = task.getProgress().equals(100.0) ? "Done" :
+                        (task.getProgress().intValue() + "%");
+                reportContent.append(String.format("#%s: %s (%s)", task.getIdTask(), task.getNameTask(), progress));
+
+                if (taskIterator.hasNext()) {
+                    todoContent.append("\n");
+                    reportContent.append("\n");
                 }
-                int columnCount = 0;
-                createCell(row, columnCount++, currentTime, style);
-                createCell(row, columnCount++, key, style);
-                createCell(row, columnCount++, todoContent.toString(), style);
-                createCell(row, columnCount++, reportContent.toString(), style);
-                createCell(row, columnCount, "", style);
-            });
-
-            //merge date
-            if (rowCount.get() - 1 > 1) {
-                sheet.addMergedRegion(new CellRangeAddress(1, rowCount.get() - 1, 0, 0));
             }
+            createCell(row, columnCount++, currentTime, style);
+            createCell(row, columnCount++, key, style);
+            createCell(row, columnCount++, todoContent.toString(), style);
+            createCell(row, columnCount++, reportContent.toString(), style);
+            createCell(row, columnCount, "", style);
+        });
+
+        //merge date
+        if (rowCount.get() - starRow > 1) {
+            sheet.addMergedRegion(new CellRangeAddress(starRow, rowCount.get() - 1, 0, 0));
+        }
     }
 
-    public void export(HttpServletResponse response) throws IOException {
+    public void export(String filePath) throws IOException {
         prepareDataForExport();
-        for (Map.Entry<String, Map<String, Set<Task>>> entry : exportData.entrySet()) {
-            writeHeaderLine(entry.getKey());
-            writeDataLines(entry.getValue());
+        String excelFilePath = filePath + fileName;
+        FileInputStream inputStream = null;
+        FileOutputStream outputStream = null;
+        try {
+
+            File inputFile = new File(excelFilePath);
+            if (inputFile.isFile()) {
+                inputStream = new FileInputStream(inputFile);
+                workbook = new XSSFWorkbook(inputStream);
+            }
+
+            for (Map.Entry<String, Map<String, Set<Task>>> entry : exportData.entrySet()) {
+                if (Objects.isNull(workbook.getSheet(entry.getKey()))) {
+                    writeHeaderLine(entry.getKey());
+                }
+                writeDataLines(entry.getValue(), entry.getKey());
+            }
+
+            if (inputStream != null) {
+                inputStream.close();
+            }
+
+            outputStream = new FileOutputStream(excelFilePath);
+            workbook.write(outputStream);
+            workbook.close();
+            outputStream.close();
+        } catch (IOException | EncryptedDocumentException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (outputStream != null) {
+                outputStream.close();
+            }
         }
-
-        ServletOutputStream outputStream = response.getOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
-
-        outputStream.close();
     }
 
     private void prepareDataForExport() {

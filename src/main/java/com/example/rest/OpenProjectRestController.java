@@ -5,7 +5,6 @@ import com.example.model.Task;
 import com.example.service.GetOpenProjectDataService;
 import com.example.service.OpenProjectExportExcel;
 import com.example.util.DateTimeUtil;
-import org.apache.commons.codec.EncoderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 public class OpenProjectRestController {
@@ -30,6 +24,8 @@ public class OpenProjectRestController {
     private String projectList;
     @Value("${host_url}")
     private String hostUrl;
+    @Value("${file_path}")
+    private String filePath;
 
     @Autowired
     private GetOpenProjectDataService service;
@@ -43,7 +39,7 @@ public class OpenProjectRestController {
     }
 
     @GetMapping(value = "/filter")
-    public void filterData(HttpServletResponse response) throws EncoderException, IOException, URISyntaxException {
+    public String filterData(HttpServletResponse response) throws IOException {
 
         String currentDate = DateTimeUtil.dateToString(new Date(), DateTimeUtil.YYYY_MM_DD_FORMAT);
 
@@ -69,13 +65,9 @@ public class OpenProjectRestController {
 
         response.setContentType("application/json");
 
-        String headerKey = "Content-Disposition";
-        //String headerValue = "attachment; filename=Daily_Report_" + currentDate + ".xlsx";
-        String headerValue = "attachment; filename=Daily_Report.xlsx";
-        response.setHeader(headerKey, headerValue);
-
         OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data);
-        excelExporter.export(response);
+        excelExporter.export(filePath);
+        return "Success update daily report!";
     }
 
 }
