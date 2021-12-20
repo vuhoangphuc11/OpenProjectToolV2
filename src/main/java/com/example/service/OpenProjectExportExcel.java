@@ -9,12 +9,11 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,11 +23,13 @@ public class OpenProjectExportExcel {
     private XSSFSheet sheet;
     private final Map<String, Map<String, Set<Task>>> exportData;
     private final String fileName = "Daily_Report.xlsx";
+    private final String date;
 
     private final OpenProject openProject;
 
-    public OpenProjectExportExcel(OpenProject openProject) {
+    public OpenProjectExportExcel(OpenProject openProject, String date) {
         this.openProject = openProject;
+        this.date = date;
         workbook = new XSSFWorkbook();
         exportData = new HashMap<>();
     }
@@ -71,8 +72,8 @@ public class OpenProjectExportExcel {
     }
 
     private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee, String projectName) {
-        LocalDateTime dateNow = LocalDateTime.now();
-        String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
+//        LocalDateTime dateNow = LocalDateTime.now();
+//        String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
 
         CellStyle style = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
@@ -118,7 +119,7 @@ public class OpenProjectExportExcel {
                     reportContent.append("\n");
                 }
             }
-            createCell(row, columnCount++, currentTime, style);
+            createCell(row, columnCount++, date, style);
             createCell(row, columnCount++, key, style);
             createCell(row, columnCount++, todoContent.toString(), style);
             createCell(row, columnCount++, reportContent.toString(), style);
