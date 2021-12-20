@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8" />
+        <title>Bstar - Tool</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
+        <meta content="Coderthemes" name="author" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="/assets/images/favicon.ico">
+
+        <!--Morris Chart CSS -->
+        <link rel="stylesheet" href="/assets/plugins/morris/morris.css">
+
+        <!-- App css -->
+        <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/css/icons.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/css/style.css" rel="stylesheet" type="text/css" />
+
+        <script src="/assets/js/modernizr.min.js"></script>
+
+    </head>
+
+    <body>
+
+        <!-- Navigation Bar-->
+        <header id="topnav">
+            <div class="topbar-main">
+                <div class="container-fluid">
+                <!-- Logo container-->
+                <div class="logo">
+                    <!-- Text Logo -->
+                    <a href="index.html" class="logo">
+                        <img src="/assets/images/logo-sm.png" alt="" height="26" class="logo-small">
+                        <img src="/assets/images/logo.png" alt="" height="60" class="logo-large">
+                    </a>
+
+                </div>
+                <!-- End Logo container-->
+
+
+                <div class="menu-extras topbar-custom">
+
+                    <ul class="list-unstyled topbar-right-menu float-right mb-0">
+
+                        <li class="menu-item">
+                            <!-- Mobile menu toggle--> <a class="navbar-toggle nav-link">
+                                <div class="lines">
+                                    <span></span> <span></span> <span></span>
+                                </div>
+                        </a> <!-- End mobile menu toggle-->
+                        </li>
+
+
+                        <li class="dropdown notification-list"><a
+                            class="nav-link dropdown-toggle waves-effect waves-light nav-user"
+                            data-toggle="dropdown" href="" role="button"
+                            aria-haspopup="false" aria-expanded="false"> <!-- <img th:src="@{|/assets/img/testimonial/${acc.image}|}" alt="user" class="rounded-circle"> -->
+                            Hello [[${#httpServletRequest.remoteUser}]] !  <i class="ti-angle-down"></i>
+                        </a>
+                            <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
+                                <!-- item-->
+                                <a class="dropdown-item notify-item">
+                                    
+                                        <form th:action="@{/logout}" method="post">
+                                            <i class="ti-power-off m-r-5"></i><input type="submit" value="Sign Out"/>
+                                        </form>
+                                </a>
+                                
+
+                            </div></li>
+
+                    </ul>
+                </div>
+                <!-- end menu-extras -->
+                <div class="clearfix"></div>
+                </div> <!-- end container -->
+            </div>
+            <!-- end topbar-main -->
+
+            <div class="navbar-custom">
+                <div class="container-fluid">
+                    <div id="navigation">
+                        <!-- Navigation Menu-->
+                        <ul class="navigation-menu" style="text-align: center;">
+                            <li class="has-submenu active">
+                                <a href=""><i class="mdi mdi-home"></i><span>Home</span> </a>
+                            </li>
+                        </ul>
+                        <!-- End navigation menu -->
+                    </div> <!-- end #navigation -->
+                </div> <!-- end container -->
+            </div> <!-- end navbar-custom -->
+        </header>
+        <!-- End Navigation Bar-->
+
+
+        <div class="wrapper">
+            <div class="container-fluid">
+
+                <!-- Page-Title -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">Bstar Tool OpenProject</h4>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xl-3"></div>
+                        <div class="col-xl-6">
+                            <div class="card-box">
+                                <form th:action="@{/export}" method="get">
+
+                                    <div class="form-group">
+                                        <label>Path</label>
+                                        <input name="path" class="form-control" type="text" placeholder="Choose the path to save the file">
+                                    </div>
+
+                                    <!-- <div class="form-group">
+                                        <label>Project Id</label>
+                                        <input name="projectId" class="form-control" type="text" placeholder="Enter project id">
+                                    </div> -->
+                                    
+                                    <div class="form-group">
+                                        <label>Date</label>
+                                        <input name="date" class="form-control" type="date" placeholder="Default input" required>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success btn-rounded w-md waves-effect waves-light m-b-5">Export Excel</button>
+                                
+                                </form>
+                            </div>
+                        </div>
+                    <div class="col-xl-3"></div>
+                </div>
+
+            </div> <!-- end container -->
+
+        </div>
+        <!-- end wrapper -->
+
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        2021 © Bstar Solutions. bstarsolutions.com
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- End Footer -->
+
+
+
+        <!-- jQuery  -->
+        <script src="/assets/js/jquery.min.js"></script>
+        <script src="/assets/js/popper.min.js"></script>
+        <script src="/assets/js/bootstrap.min.js"></script>
+        <script src="/assets/js/waves.js"></script>
+        <script src="/assets/js/jquery.slimscroll.js"></script>
+
+        <!-- KNOB JS -->
+        <!--[if IE]>
+        <script type="text/javascript" src="/assets/plugins/jquery-knob/excanvas.js"></script>
+        <![endif]-->
+        <script src="/assets/plugins/jquery-knob/jquery.knob.js"></script>
+
+        <!--Morris Chart-->
+        <script src="/assets/plugins/morris/morris.min.js"></script>
+        <script src="/assets/plugins/raphael/raphael-min.js"></script>
+
+        <!-- Dashboard init -->
+        <script src="/assets/pages/jquery.dashboard.js"></script>
+
+
+        <!-- App js -->
+        <script src="/assets/js/jquery.core.js"></script>
+        <script src="/assets/js/jquery.app.js"></script>
+
+    </body>
+</html>
