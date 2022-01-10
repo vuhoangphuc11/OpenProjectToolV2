@@ -20,7 +20,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/getall","/export").permitAll()
+                .antMatchers("/getall", "/export", "/error").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -34,7 +34,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .tokenValiditySeconds(86400);
 
         http.exceptionHandling()
-                .accessDeniedPage("/unauthoried");
+                .accessDeniedPage("/error");
 
         http.formLogin().loginPage("/login/form").loginProcessingUrl("/login")
                 .defaultSuccessUrl("/login/success", false).failureUrl("/login/error");

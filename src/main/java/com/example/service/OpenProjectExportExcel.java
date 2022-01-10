@@ -9,7 +9,6 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -72,8 +71,6 @@ public class OpenProjectExportExcel {
     }
 
     private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee, String projectName) {
-//        LocalDateTime dateNow = LocalDateTime.now();
-//        String currentTime = DateTimeFormatter.ofPattern("MM-dd-yyyy", Locale.ENGLISH).format(dateNow);
 
         CellStyle style = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
@@ -81,8 +78,11 @@ public class OpenProjectExportExcel {
         style.setFont(font);
         style.setWrapText(true);
 
-        // fill foreground color ...
-        style.setFillForegroundColor(IndexedColors.SEA_GREEN.index);
+        if (style.getIndex() % 2 == 0) {
+            style.setFillForegroundColor(IndexedColors.SEA_GREEN.index);
+        } else {
+            style.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.index);
+        }
         // and solid fill pattern produces solid grey cell fill
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         //set border
@@ -173,14 +173,14 @@ public class OpenProjectExportExcel {
     }
 
     private void prepareDataForExport() {
-        for (Task task:
+        for (Task task :
                 openProject.getEmbedded().getTasks()) {
             String projectName = task.getLink().getProject().getNameProject();
             String employeeName = task.getLink().getUser().getFullName();
             if (!exportData.containsKey(projectName)) {
                 Set<Task> listOfTask = new TreeSet<>(Comparator.comparingInt(Task::getIdTask));
                 listOfTask.add(task);
-                Map<String, Set<Task>>  mapOfTaskByEmployee = new HashMap<>();
+                Map<String, Set<Task>> mapOfTaskByEmployee = new HashMap<>();
                 mapOfTaskByEmployee.put(employeeName, listOfTask);
 
                 exportData.put(projectName, mapOfTaskByEmployee);

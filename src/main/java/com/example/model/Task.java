@@ -24,4 +24,6 @@ public class Task {
     Links link;
     @JsonProperty("spentOn")
     String spentOn;
+    @JsonProperty("name")
+    String nameProject;
 }
