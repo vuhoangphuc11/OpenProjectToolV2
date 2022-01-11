@@ -162,6 +162,7 @@ public class OpenProjectExportExcel {
             outputStream.close();
         } catch (IOException | EncryptedDocumentException ex) {
             ex.printStackTrace();
+            throw ex;
         } finally {
             if (inputStream != null) {
                 inputStream.close();

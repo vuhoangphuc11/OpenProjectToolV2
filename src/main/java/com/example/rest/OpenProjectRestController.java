@@ -6,6 +6,8 @@ import com.example.service.GetOpenProjectDataService;
 import com.example.service.OpenProjectExportExcel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -16,7 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 
-@RestController
+@Controller
 public class OpenProjectRestController {
 
     @Value("${host_url}")
@@ -32,11 +34,12 @@ public class OpenProjectRestController {
         return data;
     }
 
-    @GetMapping(value = "/export")
+    @RequestMapping(value = "/export" , method = RequestMethod.GET)
     public String exportData(HttpServletResponse response,
                              @RequestParam(name = "date", required = false) String date,
                              @RequestParam(name = "projectId", required = false) String projectId,
-                             @RequestParam(name = "path", required = false) String path) throws IOException, ParseException {
+                             @RequestParam(name = "path", required = false) String path,
+                             Model model) throws IOException, ParseException {
         String filters = "[{\"project\": { \"operator\": \"=\", \"values\": [%s]}},{\"spent_on\":{\"operator\":\"=d\",\"values\":[\"%s\"]}}]";
         String url = hostUrl + "/api/v3/time_entries";
 
@@ -62,11 +65,21 @@ public class OpenProjectRestController {
         try {
             OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data, date);
             excelExporter.export(path);
-        } catch (FileNotFoundException e) {
-            return "<center><h2>It looks like you have a report file open please close and try again!</h2></center>";
+            String success = "Export successfully!";
+            model.addAttribute("message_success",success);
+
+        } catch (FileNotFoundException ex){
+            String fail = "Please close the file before exporting!";
+            model.addAttribute("message_fail",fail);
+            return "forward:/home";
+        }
+        catch (Exception e) {
+            String fail = "Export fail!";
+            model.addAttribute("message_fail",fail);
+            return "forward:/home";
         }
 
 
-        return "<center><h2>Success update daily report!</h2></center>";
+        return "forward:/home";
     }
 }
