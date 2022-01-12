@@ -118,15 +118,21 @@
 
                                     <div class="form-group">
                                         <label>Project Name</label>
-                                        <select name="projectId" class="form-control">
+                                        <select multiple="true" name="projectId" class="form-control" required>
                                             <option th:each="item : ${arr}" th:value="${item.idTask}" th:name="${item.idTask}" th:text="${item.nameProject}"></option>
                                         </select>
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Date</label>
-                                        <input name="date" class="form-control" type="date" placeholder="Default input" required>
+                                        <label>Date Start: </label>
+                                        <input name="dateStr" class="form-control" type="date" placeholder="Default input" required>
                                     </div>
+
+                                    <div class="form-group">
+                                        <label>Date End: </label>
+                                        <input name="dateEn" class="form-control" type="date" placeholder="Default input">
+                                    </div>
+
 
                                     <button type="submit" class="btn btn-success btn-rounded w-md waves-effect waves-light m-b-5">Export Excel</button>
 
