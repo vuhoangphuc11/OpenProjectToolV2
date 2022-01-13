@@ -22,9 +22,12 @@ import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -55,17 +58,18 @@ public class OpenProjectExportExcel {
     XSSFFont font = workbook.createFont();
     font.setBold(true);
     font.setFontHeight(12);
-    style.setFont(font);
+    font.setFontName("Calibri");
 
+    style.setFont(font);
     // fill foreground color ...
-    style.setFillForegroundColor(IndexedColors.SEA_GREEN.index);
+    style.setFillForegroundColor(IndexedColors.LIME.index);
     // and solid fill pattern produces solid grey cell fill
     style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-    style.setBorderBottom(BorderStyle.MEDIUM);
-    style.setBorderLeft(BorderStyle.MEDIUM);
-    style.setBorderRight(BorderStyle.MEDIUM);
-    style.setBorderTop(BorderStyle.MEDIUM);
+    style.setBorderBottom(BorderStyle.THIN);
+    style.setBorderLeft(BorderStyle.THIN);
+    style.setBorderRight(BorderStyle.THIN);
+    style.setBorderTop(BorderStyle.THIN);
 
 
     createCell(row, 0, "Date", style);
@@ -88,21 +92,48 @@ public class OpenProjectExportExcel {
     CellStyle style = workbook.createCellStyle();
     XSSFFont font = workbook.createFont();
     font.setFontHeight(12);
+    font.setFontName("Calibri");
+
     style.setFont(font);
     style.setWrapText(true);
 
-    if (style.getIndex() % 2 == 0) {
-      style.setFillForegroundColor(IndexedColors.SEA_GREEN.index);
-    } else {
-      style.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.index);
-    }
+    //demo
+    CellStyle styleDate =  workbook.createCellStyle();
+
+    styleDate.setFont(font);
+    styleDate.setWrapText(true);
+
+    /* Center Align Cell Contents */
+    styleDate.setAlignment(HorizontalAlignment.CENTER);
+    styleDate.setVerticalAlignment(VerticalAlignment.CENTER);
+    //demo
+
+
+//    if (style.getIndex() % 2 == 0 && styleDate.getIndex() % 2 == 0) {
+//      style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+//      styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+//    } else {
+//      style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+//      styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+//    }
+
     // and solid fill pattern produces solid grey cell fill
     style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+    // and solid fill pattern produces solid grey cell fill date
+    styleDate.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+
+    //set border date
+    styleDate.setBorderBottom(BorderStyle.THIN);
+    styleDate.setBorderLeft(BorderStyle.THIN);
+    styleDate.setBorderRight(BorderStyle.THIN);
+    styleDate.setBorderTop(BorderStyle.THIN);
     //set border
-    style.setBorderBottom(BorderStyle.MEDIUM);
-    style.setBorderLeft(BorderStyle.MEDIUM);
-    style.setBorderRight(BorderStyle.MEDIUM);
-    style.setBorderTop(BorderStyle.MEDIUM);
+    style.setBorderBottom(BorderStyle.THIN);
+    style.setBorderLeft(BorderStyle.THIN);
+    style.setBorderRight(BorderStyle.THIN);
+    style.setBorderTop(BorderStyle.THIN);
 
     sheet = workbook.getSheet(projectName);
 
@@ -161,7 +192,16 @@ public class OpenProjectExportExcel {
           }
         }
 
-        createCell(row, columnCount.getAndIncrement(), dateStr, style);
+        if(cell.getRowIndex() % 2 == 0){
+          style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+          styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        }else{
+          style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+          styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+        }
+
+
+        createCell(row, columnCount.getAndIncrement(), dateStr, styleDate);
         createCell(row, columnCount.getAndIncrement(), username, style);
         createCell(row, columnCount.getAndIncrement(), todoContent.toString(), style);
         createCell(row, columnCount.getAndIncrement(), reportContent.toString(), style);
