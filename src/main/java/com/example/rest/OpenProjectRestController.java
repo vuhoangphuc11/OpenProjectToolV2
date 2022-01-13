@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static com.example.common.CommonUtils.isNullOrEmpty;
+
 @Controller
 public class OpenProjectRestController {
 
@@ -38,17 +40,17 @@ public class OpenProjectRestController {
 
   @RequestMapping(value = "/export", method = RequestMethod.GET)
   public String exportData(HttpServletResponse response,
-                           @RequestParam(name = "dateStr", required = false) String dateStr,
-                           @RequestParam(name = "dateEn", required = false) String dateEn,
+                           @RequestParam(name = "dateStart", required = false) String dateStart,
+                           @RequestParam(name = "dateEnd", required = false) String dateEnd,
                            @RequestParam(name = "projectId", required = false) String projectId,
                            @RequestParam(name = "path", required = false) String path,
                            Model model) throws IOException, ParseException {
 
     OpenProject data;
-    System.out.println(dateStr);
-    System.out.println(dateEn);
+    System.out.println(dateStart);
+    System.out.println(dateEnd);
 
-    if (dateEn.equalsIgnoreCase("") && dateEn == null) {
+    if (dateEnd.equalsIgnoreCase("") && isNullOrEmpty(dateEnd)) {
 
       //select of the day
       String filters =
@@ -56,7 +58,7 @@ public class OpenProjectRestController {
       String url = hostUrl + "/api/v3/time_entries";
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filters",
-          String.format(filters, projectId, dateStr));
+          String.format(filters, projectId, dateStart));
       data = service.callApi(builder.build().toUri());
     } else {
 
@@ -66,7 +68,7 @@ public class OpenProjectRestController {
       String url = hostUrl + "/api/v3/time_entries";
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url).queryParam("filters",
-          String.format(filters, projectId, dateStr, dateEn));
+          String.format(filters, projectId, dateStart, dateEnd));
       data = service.callApi(builder.build().toUri());
     }
 
@@ -86,7 +88,7 @@ public class OpenProjectRestController {
     response.setContentType("application/json");
 
     try {
-      OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data, dateStr);
+      OpenProjectExportExcel excelExporter = new OpenProjectExportExcel(data, dateStart);
       excelExporter.export(path);
       String success = "Export successfully!";
       model.addAttribute("message_success", success);
