@@ -17,7 +17,7 @@ public class GetOpenProjectDataService {
     ResponseEntity<OpenProject> response;
     RestTemplate restTemplate = new RestTemplate();
 
-    String authStr = "apikey:8f24ee3239e31dbf9007df2b990e5e895e6947d796f8bce63738ed3e0347ea1c";
+    String authStr = "apikey:b2805f1a021f4a21795b34d12297c163b3453a31c60120aee0d8b21176d67ef6";
 
     String base64Creds = Base64.getEncoder().encodeToString(authStr.getBytes());
 
