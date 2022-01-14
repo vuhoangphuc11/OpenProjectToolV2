@@ -109,13 +109,13 @@ public class OpenProjectExportExcel {
     //demo
 
 
-//    if (style.getIndex() % 2 == 0 && styleDate.getIndex() % 2 == 0) {
-//      style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-//      styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-//    } else {
-//      style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex( ));
-//      styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
-//    }
+    if (style.getIndex() % 2 == 0 && styleDate.getIndex() % 2 == 0) {
+      style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+      styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+    } else {
+      style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex( ));
+      styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+    }
 
     // and solid fill pattern produces solid grey cell fill
     style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -192,13 +192,13 @@ public class OpenProjectExportExcel {
           }
         }
 
-        if (cell.getRowIndex() % 2 == 0) {
-          style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-          styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-        } else {
-          style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
-          styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
-        }
+//        if (cell.getRowIndex() % 2 == 0) {
+//          style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+//          styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+//        } else {
+//          style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+//          styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+//        }
 
 
         createCell(row, columnCount.getAndIncrement(), dateStr, styleDate);
