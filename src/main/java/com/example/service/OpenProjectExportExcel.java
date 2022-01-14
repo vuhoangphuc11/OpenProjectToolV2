@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +28,6 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -36,7 +36,7 @@ public class OpenProjectExportExcel {
 
   private XSSFWorkbook workbook;
   private XSSFSheet sheet;
-  private final Map<String, Map<String, Set<Task>>> exportData;
+  private final Map<String, Map<String,List<Task>>> exportData;
   private final String fileName = "Daily_Report.xlsx";
   private final String date;
 
@@ -87,7 +87,7 @@ public class OpenProjectExportExcel {
     sheet.autoSizeColumn(columnCount);
   }
 
-  private void writeDataLines(Map<String, Set<Task>> mapOfTaskByEmployee, String projectName) {
+  private void writeDataLines(Map<String,List<Task>> mapOfTaskByEmployee, String projectName) {
 
     CellStyle style = workbook.createCellStyle();
     XSSFFont font = workbook.createFont();
@@ -98,7 +98,7 @@ public class OpenProjectExportExcel {
     style.setWrapText(true);
 
     //demo
-    CellStyle styleDate =  workbook.createCellStyle();
+    CellStyle styleDate = workbook.createCellStyle();
 
     styleDate.setFont(font);
     styleDate.setWrapText(true);
@@ -113,7 +113,7 @@ public class OpenProjectExportExcel {
 //      style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
 //      styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
 //    } else {
-//      style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
+//      style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex( ));
 //      styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
 //    }
 
@@ -138,7 +138,7 @@ public class OpenProjectExportExcel {
     sheet = workbook.getSheet(projectName);
 
     AtomicInteger starRow = new AtomicInteger(sheet.getLastRowNum() + 1);
-    AtomicInteger rowCount = new AtomicInteger(starRow.get());
+    AtomicInteger rowCount = new AtomicInteger(starRow.get() );
 
     //key: date, value: map<employee, tasks>
     Map<String, Map<String, List<Task>>> mapOfTasks = new TreeMap<>();
@@ -192,10 +192,10 @@ public class OpenProjectExportExcel {
           }
         }
 
-        if(cell.getRowIndex() % 2 == 0){
+        if (cell.getRowIndex() % 2 == 0) {
           style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
           styleDate.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-        }else{
+        } else {
           style.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
           styleDate.setFillForegroundColor(IndexedColors.LEMON_CHIFFON.getIndex());
         }
@@ -264,7 +264,7 @@ public class OpenProjectExportExcel {
         workbook = new XSSFWorkbook(inputStream);
       }
 
-      for (Map.Entry<String, Map<String, Set<Task>>> entry : exportData.entrySet()) {
+      for (Map.Entry<String, Map<String,List<Task>>> entry : exportData.entrySet()) {
         if (Objects.isNull(workbook.getSheet(entry.getKey()))) {
           writeHeaderLine(entry.getKey());
         }
@@ -297,18 +297,18 @@ public class OpenProjectExportExcel {
       String projectName = task.getLink().getProject().getNameProject();
       String employeeName = task.getLink().getUser().getFullName();
       if (!exportData.containsKey(projectName)) {
-        Set<Task> listOfTask = new TreeSet<>(Comparator.comparingInt(Task::getIdTask));
+       List<Task> listOfTask = new ArrayList<>();
         listOfTask.add(task);
-        Map<String, Set<Task>> mapOfTaskByEmployee = new HashMap<>();
+        Map<String,List<Task>> mapOfTaskByEmployee = new HashMap<>();
         mapOfTaskByEmployee.put(employeeName, listOfTask);
 
         exportData.put(projectName, mapOfTaskByEmployee);
       } else {
-        Map<String, Set<Task>> mapOfTaskByEmployee = exportData.get(projectName);
+        Map<String,List<Task>> mapOfTaskByEmployee = exportData.get(projectName);
         if (mapOfTaskByEmployee.containsKey(employeeName)) {
           mapOfTaskByEmployee.get(employeeName).add(task);
         } else {
-          Set<Task> listOfTask = new TreeSet<>(Comparator.comparingInt(Task::getIdTask));
+         List<Task> listOfTask = new ArrayList<>();
           listOfTask.add(task);
           mapOfTaskByEmployee.put(employeeName, listOfTask);
         }

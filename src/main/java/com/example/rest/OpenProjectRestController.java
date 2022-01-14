@@ -12,6 +12,7 @@ import java.text.ParseException;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,8 +48,8 @@ public class OpenProjectRestController {
                            Model model) throws IOException, ParseException {
 
     OpenProject data;
-    System.out.println(dateStart);
-    System.out.println(dateEnd);
+    System.out.println("Param date start = "+dateStart);
+    System.out.println("Param date end = "+dateEnd);
 
     if (dateEnd.equalsIgnoreCase("") && isNullOrEmpty(dateEnd)) {
 
@@ -72,20 +73,7 @@ public class OpenProjectRestController {
       data = service.callApi(builder.build().toUri());
     }
 
-    for (int i = 0; i < data.getEmbedded().getTasks().size(); i++) {
-
-      String href = data.getEmbedded().getTasks().get(i).getLink().getWorkPackage().getHref();
-      UriComponentsBuilder call = UriComponentsBuilder.fromUriString(hostUrl + href);
-      OpenProject output = service.callApi(call.build().toUri());
-
-      Task task = data.getEmbedded().getTasks().get(i);
-
-      System.out.println(task.getSpentOn());
-
-      task.setIdTask(output.getIdTask());
-      task.setNameTask(output.getNameTask());
-      task.setProgress(output.getPercentageDone());
-    }
+    data.getEmbedded().getTasks().parallelStream().forEach(this::process);
 
     response.setContentType("application/json");
 
@@ -107,5 +95,18 @@ public class OpenProjectRestController {
 
 
     return "forward:/home";
+  }
+
+  @Async
+  void process(Task task){
+    String href =task.getLink().getWorkPackage().getHref();
+    UriComponentsBuilder call = UriComponentsBuilder.fromUriString(hostUrl + href);
+    OpenProject output = service.callApi(call.build().toUri());//TODO:
+
+    System.out.println("ID Task :: "+task.getIdTask()+" | Date logtime :: "+task.getSpentOn());
+
+    task.setIdTask(output.getIdTask());
+    task.setNameTask(output.getNameTask());
+    task.setProgress(output.getPercentageDone());
   }
 }
