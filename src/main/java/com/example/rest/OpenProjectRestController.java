@@ -29,6 +29,9 @@ public class OpenProjectRestController {
   @Value("${host_url}")
   private String hostUrl;
 
+  @Value("${default_path}")
+  private String defaultPath;
+
   @Autowired
   private GetOpenProjectDataService service;
 
@@ -46,7 +49,9 @@ public class OpenProjectRestController {
                            @RequestParam(name = "projectId", required = false) String projectId,
                            @RequestParam(name = "path", required = false) String path,
                            Model model) throws IOException, ParseException {
-
+    if(isNullOrEmpty(path)){
+      path = defaultPath;
+    }
     OpenProject data;
     System.out.println("Param date start = "+dateStart);
     System.out.println("Param date end = "+dateEnd);
